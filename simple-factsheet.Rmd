@@ -1,12 +1,14 @@
 ---
 header-includes:
 - \input{preamble.tex}
-fontsize: 10pt
+fontsize: 11pt
 output: pdf_document
 sansfont: Lato
 font:     Lato
 geometry: "left=1in,right=1in,top=0.35in,bottom=0.6in"
 urlcolor: #169d62
+params:
+  parameter1: NA
 ---
 
 \raggedright
@@ -25,17 +27,41 @@ library(kableExtra)
 library(urbnthemes)
 
 set_urbn_defaults(style = "print")
-```
 
+table <- table1 %>%
+  filter(statename == params$parameter1)  
+
+if (table$note == 1) {
+  statement <- "which expanded Medicaid under the Affordable Care Act after 2017"
+}
+if (table$note == 0) {
+  statement <- "which expanded Medicaid under the Affordable Care Act after 2017" 
+}
+```
+  
 \urbnlogo{}
 
-\urbntitle{Title of a Simple Factsheet Template}
-\urbnsubtitle{Subtitle of a Simple Factsheet Template}
-\urbnauthors{Aaron Williams, Irvin Mull, and Graham MacDonald}
+\urbntitle{`r table$note`}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+\urbntitle{Insurance Coverage among Women of Reproductive Age in `r table$statename`}
 
-\urbnheadingone{Heading 1}
+The Affordable Care Act established several provisions aimed at reducing the uninsurance rate, and the number of uninsured women of reproductive age (15–44) in the United States fell from 12.7 million in 2013 to 7.5 million in 2017.
+
+In `r table$statename`, `r statement`, the uninsurance rate fell from `r table$ui_mn13` percent in 2013 to `r table$ui_mn` percent in 2017. Despite these gains, approximately `r table$ui_n` `r table$statename` women of reproductive age remained uninsured in 2017.
+
+\urbnheadingone{Uninsurance Rate among Subgroups of Women in `r table$statename` and the US, 2017}
+
+Uninsured women are vulnerable to well-documented access, affordability, and health problems associated with lacking insurance coverage, including potentially limited access to family planning and other reproductive health services.
+
+<div style="float: left; width: 50%;">
+
+* Women of reproductive age in California had a lower uninsurance rate (8.8 percent) than similar women nationwide (11.7 percent) in 2017 (figure 1).
+
+* Within California, Hispanic women, single mothers, women with incomes below 250 percent of the federal poverty level, women in nonmetropolitan areas, and women who were unemployed or not in the labor force had higher uninsurance rates than the state average for all women of reproductive age in 2017.
+
+* Reducing the uninsurance rate among women of reproductive age in California may require further expanding access to Medicaid or other highly subsidized insurance, as well as targeted outreach and enrollment efforts to subgroups of already eligible women with the highest uninsurance rates.
+
+</div>
 
 \urbnheadingtwo{Heading 2}Lorem ipsum dolor sit amet, adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
