@@ -1,0 +1,130 @@
+---
+header-includes:
+- \input{preamble.tex}
+fontsize: 11pt
+output: pdf_document
+sansfont: Lato
+font:     Lato
+geometry: "left=0.5in,right=0.5in,top=0.25in,bottom=0.5in"
+urlcolor: #169d62
+params:
+  parameter1: NA
+---
+\raggedright
+\urbnlogo{}
+
+```{r rmarkdown-setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(dev = "cairo_pdf")
+options(knitr.kable.NA = "")
+options(kableExtra.latex.load_packages = FALSE)
+
+library(scales)
+library(ggforce)
+library(forcats)
+library(stringr)
+library(ggrepel)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(urbnthemes)
+
+set_urbn_defaults(style = "print")
+
+# will need to be in iterate.R
+table1 <- read.csv(file="D:/Users/LDurbak/Box Sync/My Box Notes/HPC/R Factsheets Uninsurance/hpc-uninsurance-factsheets-master/Tables/StateFactSheetData_521.csv", header=TRUE, sep=",")
+datdict <- read.csv(file="D:/Users/LDurbak/Box Sync/My Box Notes/HPC/R Factsheets Uninsurance/hpc-uninsurance-factsheets-master/Tables/State Uninsurance WRA Data Dictionary.csv", header=TRUE, sep=",")
+row.names(datdict)<-datdict$Variable.Name
+pie_labels<-datdict[c("hier_pov_none_share", "hier_noncit400pl_share","hier_mktplce_share","hier_medicaid_share"),]["Label.for.Figures"]
+pie_labels$var<-row.names(pie_labels)
+pie_labs<-pie_labels %>% mutate(lab_for_figs = as.character(Label.for.Figures)) %>% select(var, lab_for_figs)
+
+colnames(table1)[1]<-"statename"
+
+table <- table1 %>%
+  filter(statename == "Tennessee")  
+
+# apply formats
+table[,grep("_share",colnames(table))]<-format(round(table[,grep("_share",colnames(table))]*100,2),big.mark=",")
+table[,grep("_mn",colnames(table))]<-format(round(table[,grep("_mn",colnames(table))]*100,2),big.mark=",")
+table[,grep("_n",colnames(table))]<-format(table[,grep("_n",colnames(table))],big.mark=",")
+
+
+if (table$expansion == 0) {
+  caption <- "Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through the state's Basic Health Program. "
+  lookingahead<-paste("Expanding Medicaid would likely benefit approximately,", as.numeric(table$hier_pov_none_share) + as.numeric(table$hier_100_138_share)," percent of uninsured",table$statename," women of reproductive age, including currently ineligible citizens with incomes below the FPL (", table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
+}
+if (table$expansion == 1) {
+  caption <- "Some uninsured women in all categories may be eligible for or enrolled in a Medicaid plan that covers family planning services only. Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through the state's Basic Health Program. " 
+  lookingahead<-"Following Medicaid expansion in California, the uninsurance rate fell from 23.0 percent in 2013 to 8.8 percent in 2017. Despite coverage gains, approximately 710,000 California women of reproductive age remained uninsured in 2017. "
+}
+
+t<-table %>% 
+  select(hier_pov_none_share, hier_noncit400pl_share,hier_mktplce_share,hier_medicaid_share) %>% 
+  gather(key="var",value="value") %>% 
+  left_join(pie_labs)
+
+t$lab_for_figs_brks<-sapply(strwrap(t$lab_for_figs, 35, simplify=FALSE), paste, collapse="\n" )
+
+table2<-t %>% 
+  mutate(labels_w_num = paste(lab_for_figs_brks, " \n",as.character(value), "%", sep =""), 
+         value = as.numeric(value),
+         label_position = cumsum(value),
+         end = 2 * pi * cumsum(value)/sum(value),
+         start = lag(end, default = 0),
+         middle = 0.5 * (start + end),
+         hjust = ifelse(middle > pi, 1, 0),
+         vjust = ifelse(middle < pi/2 | middle > 3 * pi/2, 0, 1))
+
+p<-ggplot(table2) + 
+  geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0, r = 1,
+                   start = start, end = end, fill = var),color="white") +
+  geom_text_repel(mapping=aes(x = 1.05 * sin(middle), y = 1.05 * cos(middle), label = labels_w_num,hjust=hjust,vjust=vjust),
+                  size=3,
+                  nudge_x = c(0.5,0.5,-0.5,-0.5),
+                  segment.color = "grey50") +
+  scale_fill_manual(values=c("#1696d2", "#1696d2", "#1696d2", "#1696d2")) +
+  coord_fixed() +
+  scale_x_continuous(limits = c(-2.5, 3.4),  # Adjust so labels are not cut off
+                     name = "", breaks = NULL, labels = NULL) +
+  scale_y_continuous(limits = c(-1.5, 1.5),      # Adjust so labels are not cut off
+                     name = "", breaks = NULL, labels = NULL)+
+  remove_ticks() +
+  remove_axis() + 
+  theme(legend.position = "none") 
+
+ggsave("fig.pdf",plot = p, device = cairo_pdf, path = paste(getwd(),"/design",sep=''),
+       scale = 1,dpi = 300, width = 6, height = 3)
+
+```
+\urbnfigurenumber{2}
+\urbnfiguretitle{Potential Eligibility for Financial Assistance Obtaining Coverage among Uninsured Women of Reproductive Age in Tennessee, 2017}
+\begin{figure}[H]
+\centering
+ \includegraphics[width=0.8\textwidth, trim = {0 1.8cm 0.6cm 0.2cm}]{D:/Users/LDurbak/Box Sync/My Box Notes/HPC/R Factsheets Uninsurance/hpc-uninsurance-factsheets-master/design/fig.pdf}
+ \end{figure}
+\urbnsource{Source:}{Urban Institute analysis of 2017 American Community Survey.}
+\urbnnote{Note:}{CHIP is the Children's Health Insurance Program. For detailed category definitions, see Health Insurance Coverage for Women of Reproductive Age, 2017. `r caption` Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through a state-specific program.}
+
+\vspace{-0.3cm}
+Some women may remain uninsured because they lack an affordable coverage option, but others may not enroll in an affordable Medicaid, Children’s Health Insurance Program, or Marketplace plan because of a lack of awareness of their eligibility, administrative burdens, or concerns about enrolling in a public program. 
+
+Among approximately `r table$ui_n` uninsured women of reproductive age in `r table$statename` in 2017 (figure 2),
+
+\begin{urbnbullets}
+  \item about `r table$hier_medicaid_share` percent were likely eligible for comprehensive Medicaid or Children’s Health Insurance Program coverage based on their income;
+  \item another `r table$hier_mktplce_share` percent were likely eligible for assistance with premiums for Marketplace coverage based on their income, including `r table$hier_100_138_share` percent with incomes between 100 and 138 percent of the FPL;
+  \item about `r table$hier_pov_none_share`  percent were women with incomes below the FPL who were likely ineligible for assistance obtaining comprehensive Medicaid, Children’s Health Insurance Program, or Marketplace coverage; and
+  \item about `r table$hier_noncit400pl_share` percent were likely ineligible for assistance obtaining comprehensive health insurance, including noncitizens (`r table$hier_noncit_share` percent) and women with incomes above 400 percent of the FPL (`r table$hier_400pl_share` percent). 
+\end{urbnbullets}
+
+\vspace{-0.5cm}
+\urbnheadingone{Looking Ahead}
+
+Expanding Medicaid would likely benefit approximately `r table$ui_mn` percent of uninsured `r table$statename` women of reproductive age, including currently ineligible citizens with incomes below the FPL (`r table$hier_pov_none_share` percent) and those with incomes between 100 and 138 percent of the FPL (`r table$hier_100_138_share` percent) for whom Medicaid may be more affordable than Marketplace coverage. Outreach and enrollment efforts targeted at subgroups of women with high uninsurance rates and those already eligible for assistance could also help reduce the uninsurance rate in `r table$statename`, though higher subsidies may be required to help address affordability barriers. In addition to continuing to monitor the uninsurance rate, it will be critical to track women’s ability to access the general and reproductive health services they need. This will include monitoring the availability and capacity of providers that disproportionately serve low-income and uninsured women, such as community health centers and Title X clinics.	
+
+\footnoteui{}
+
+\contactinfo{}

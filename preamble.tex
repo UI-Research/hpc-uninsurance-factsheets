@@ -1,6 +1,9 @@
 % explicitly call these packages to avoid this issue:
 % https://stackoverflow.com/questions/46080853/why-does-rendering-a-pdf-from-rmarkdown-require-closing-rstudio-between-renders?
 % utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+
+\usepackage{wrapfig}
+
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
@@ -49,29 +52,42 @@
 \newcommand{\urbnlogo}[0]{
   \begin{figure}
     \hspace{-0.12in}
-    \includegraphics[width=1.5in]{design/urban_grid_blue_white.jpg}
+    \includegraphics[width=1.5in,clip]{design/urban_grid_blue_white.jpg}
     \label{fig:boat1}
   \end{figure}
 }
 
 % urban institute logo and fund logo
-\newcommand{\urbnlogofunderlogo}[1]{
+\newcommand{\urbnlogofunderlogo}[0]{
   \begin{figure}
   \centering
   \begin{minipage}{.5\textwidth}
     \centering
     \hspace{-0.12in}  
-    \includegraphics[width=1.5in,left]{design/urban_grid_blue_white.jpg}
+    \includegraphics[width=1.5in,left,clip,trim = {0 10cm 0 0}]{design/urban_grid_blue_white.jpg}
     \label{fig:test1}
   \end{minipage}%
-  \begin{minipage}{.5\textwidth}
-    \centering
-    \hspace{0.12in} 
-    Funded by:
-    \includegraphics[width=1.5in,right]{#1}
-    \label{fig:test2}
-  \end{minipage}
+  % \begin{minipage}{.5\textwidth}
+  %   \centering
+  %   \hspace{0.12in} 
+  %   Funded by:
+  %   \includegraphics[width=1.5in,right]{#1}
+  %   \label{fig:test2}
+  % \end{minipage}
+  \vspace{-0.3cm}
   \end{figure}
+}
+
+% footnote
+\newcommand{\footnoteui}[0]{
+  \thispagestyle{empty}
+  \begin{tikzpicture}[remember picture, overlay]
+   \draw
+      node[align=center, anchor=south west, minimum height=0.5in, minimum width=8.5in, text width=8in] at ($(current page.south west) + (0in,0.38in)$)
+      {
+      \color{gray}{For more information on data and methods, see \href{https://www.urban.org/research/publication/health-insurance-coverage-women-reproductive-age-2013-2016}{\emph{Health Insurance Coverage for Women of Reproductive Age, 2017.}}}
+      };
+  \end{tikzpicture}
 }
 
 % contact information
@@ -79,7 +95,7 @@
   \thispagestyle{empty}
   \begin{tikzpicture}[remember picture, overlay]
     \draw 
-      node[anchor=south west, minimum height=0.5in, minimum width=8.5in, text width=8in] at ($(current page.south west) + (0.75in,0.13in)$) 
+      node[align=center, anchor=south west, minimum height=0.5in, minimum width=8.5in, text width=8in] at ($(current page.south west) + (0in,0.13in)$)
       {\color{gray}Urban Institute \space
       \color{urbnblue}$\blacksquare$ \space
       \color{gray}500 L'Enfant Plaza \space
@@ -136,13 +152,13 @@
 }
 
 % figure source
-\newcommand{\urbnsource}[1]{
-  \textbf{\footnotesize{#1}} \break
+\newcommand{\urbnsource}[2]{
+  \textbf{\footnotesize{#1}} {\footnotesize{#2}}\break
 }
 
 % figure note
-\newcommand{\urbnnote}[1]{
-  \textbf{\footnotesize{#1}} \break
+\newcommand{\urbnnote}[2]{
+  \textbf{\footnotesize{#1}} {\footnotesize{#2}}\break
 }
 
 % table label
