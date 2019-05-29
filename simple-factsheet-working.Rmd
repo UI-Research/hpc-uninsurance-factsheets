@@ -34,8 +34,8 @@ library(urbnthemes)
 set_urbn_defaults(style = "print")
 
 # will need to be in iterate.R
-table1 <- read.csv(file="D:/Users/LDurbak/Box Sync/My Box Notes/HPC/R Factsheets Uninsurance/hpc-uninsurance-factsheets-master/Tables/StateFactSheetData_521.csv", header=TRUE, sep=",")
-datdict <- read.csv(file="D:/Users/LDurbak/Box Sync/My Box Notes/HPC/R Factsheets Uninsurance/hpc-uninsurance-factsheets-master/Tables/State Uninsurance WRA Data Dictionary.csv", header=TRUE, sep=",")
+table1 <- read.csv(file="Tables/StateFactSheetData.csv", header=TRUE, sep=",")
+datdict <- read.csv(file="Tables/State Uninsurance WRA Data Dictionary.csv", header=TRUE, sep=",")
 row.names(datdict)<-datdict$Variable.Name
 pie_labels<-datdict[c("hier_pov_none_share", "hier_noncit400pl_share","hier_mktplce_share","hier_medicaid_share"),]["Label.for.Figures"]
 pie_labels$var<-row.names(pie_labels)
@@ -78,14 +78,18 @@ table2<-t %>%
          hjust = ifelse(middle > pi, 1, 0),
          vjust = ifelse(middle < pi/2 | middle > 3 * pi/2, 0, 1))
 
-p<-ggplot(table2) + 
+p <- ggplot(table2) + 
   geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0, r = 1,
-                   start = start, end = end, fill = var),color="white") +
-  geom_text_repel(mapping=aes(x = 1.05 * sin(middle), y = 1.05 * cos(middle), label = labels_w_num,hjust=hjust,vjust=vjust),
-                  size=3,
-                  nudge_x = c(0.5,0.5,-0.5,-0.5),
-                  segment.color = "grey50") +
-  scale_fill_manual(values=c("#1696d2", "#1696d2", "#1696d2", "#1696d2")) +
+                   start = start, end = end, fill = var),color = "white") +
+  geom_text(mapping = aes(x = 1.05 * sin(middle), 
+                          y = 1.05 * cos(middle), 
+                          label = labels_w_num,
+                          hjust = hjust,
+                          vjust = vjust),
+            size = 3,
+            nudge_x = c(0.5,0.5,-0.5,-0.5),
+            segment.color = "grey50") +
+  scale_fill_manual(values = c("#1696d2", "#1696d2", "#1696d2", "#1696d2")) +
   coord_fixed() +
   scale_x_continuous(limits = c(-2.5, 3.4),  # Adjust so labels are not cut off
                      name = "", breaks = NULL, labels = NULL) +
@@ -103,7 +107,7 @@ ggsave("fig.pdf",plot = p, device = cairo_pdf, path = paste(getwd(),"/design",se
 \urbnfiguretitle{Potential Eligibility for Financial Assistance Obtaining Coverage among Uninsured Women of Reproductive Age in Tennessee, 2017}
 \begin{figure}[H]
 \centering
- \includegraphics[width=0.8\textwidth, trim = {0 1.8cm 0.6cm 0.2cm}]{D:/Users/LDurbak/Box Sync/My Box Notes/HPC/R Factsheets Uninsurance/hpc-uninsurance-factsheets-master/design/fig.pdf}
+ \includegraphics[width=0.8\textwidth, trim = {0 1.8cm 0.6cm 0.2cm}]{design/fig.pdf}
  \end{figure}
 \urbnsource{Source:}{Urban Institute analysis of 2017 American Community Survey.}
 \urbnnote{Note:}{CHIP is the Children's Health Insurance Program. For detailed category definitions, see Health Insurance Coverage for Women of Reproductive Age, 2017. `r caption` Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through a state-specific program.}
