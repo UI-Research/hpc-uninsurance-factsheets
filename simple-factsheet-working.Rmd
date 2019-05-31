@@ -52,13 +52,23 @@ table[,grep("_share",colnames(table))]<-format(round(table[,grep("_share",colnam
 table[,grep("_mn",colnames(table))]<-format(round(table[,grep("_mn",colnames(table))]*100,2),big.mark=",")
 # table[,grep("_n",colnames(table))]<-format(table[,grep("_n",colnames(table))],big.mark=",")
 
+if (table$note != 3 | table$note != 5) {
+  caption1 <- "Some uninsured women in all categories may be eligible for or enrolled in a Medicaid plan that covers family planning services only. Some uninsured women in all categories may be eligible for or enrolled in a Medicaid plan that covers family planning services only. "
+}
+if (table$note == 3 | table$note == 5) {
+  caption1 <- ""
+}
 
 if (table$note == 5) {
-  caption <- "Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through the state's Basic Health Program. "
+  caption2 <- "Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through the state's Basic Health Program. "
 }
 if (table$note == 4) {
-    caption <- "Some uninsured women in all categories may be eligible for or enrolled in a Medicaid plan that covers family planning services only. Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through the state's Basic Health Program. " 
+    caption2 <- "Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through the state's Basic Health Program. " 
 }
+if (table$note != 4 | table$note != 5) {
+    caption2 <- ""
+}
+
 if (table$expansion == 0) {
   lookingahead<-paste("Expanding Medicaid would likely benefit approximately ", table$ui_mn ," percent of uninsured ",table$statename," women of reproductive age, including currently ineligible citizens with incomes below the FPL (", table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
 }
@@ -172,7 +182,7 @@ ggplot(table2) +
 \vspace{-0.4in}
 \break
 \urbnsource{Source:}{Urban Institute analysis of 2017 American Community Survey.}
-\urbnnote{Note:}{CHIP is the Children's Health Insurance Program. For detailed category definitions, see Health Insurance Coverage for Women of Reproductive Age, 2017. `r caption` Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through a state-specific program.}
+\urbnnote{Note:}{CHIP is the Children's Health Insurance Program. For detailed category definitions, see Health Insurance Coverage for Women of Reproductive Age, 2017. `r caption1` `r caption2` Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through a state-specific program.}
 
 \vspace{-0.5cm}
 Some women may remain uninsured because they lack an affordable coverage option, but others may not enroll in an affordable Medicaid, Children’s Health Insurance Program, or Marketplace plan because of a lack of awareness of their eligibility, administrative burdens, or concerns about enrolling in a public program. 
