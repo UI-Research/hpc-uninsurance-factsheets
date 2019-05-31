@@ -16,6 +16,11 @@
 \usepackage[normalem]{ulem}
 \usepackage[export]{adjustbox}  % enables two column images at the top
 \usepackage{makecell}           % for library(kableExtra)
+\usepackage{paracol}
+\usepackage{geometry}
+\geometry{
+  margin=.5in
+}
 %\usepackage{tabularx}           % for library(kableExtra)
 
 % set font encoding for PDFLaTeX or XeLaTeX
@@ -49,8 +54,9 @@
 \newcommand{\urbnlogo}[0]{
   \begin{figure}
     \hspace{-0.12in}
-    \includegraphics[width=1.5in]{design/urban_grid_blue_white.jpg}
+    \includegraphics[width=1.5in,clip]{design/urban_grid_blue_white.jpg}
     \label{fig:boat1}
+    \vspace{-0.25in}
   \end{figure}
 }
 
@@ -72,6 +78,19 @@
     \label{fig:test2}
   \end{minipage}
   \end{figure}
+}
+
+
+% footnote
+\newcommand{\footnoteui}[0]{
+  \thispagestyle{empty}
+  \begin{tikzpicture}[remember picture, overlay]
+   \draw
+      node[align=center, anchor=south west, minimum height=0.5in, minimum width=8.5in, text width=8in] at ($(current page.south west) + (0in,0.38in)$)
+      {
+      \color{gray}{For more information on data and methods, see \href{https://www.urban.org/research/publication/health-insurance-coverage-women-reproductive-age-2013-2016}{\emph{Health Insurance Coverage for Women of Reproductive Age, 2017.}}}
+      };
+  \end{tikzpicture}
 }
 
 % contact information
@@ -117,6 +136,7 @@
 
 % heading 1
 \newcommand{\urbnheadingone}[1]{
+  \vspace{0.15in}
   \textbf{\LARGE{\\} \large{#1}}
 }
 
@@ -136,13 +156,13 @@
 }
 
 % figure source
-\newcommand{\urbnsource}[1]{
-  \textbf{\footnotesize{#1}} \break
+\newcommand{\urbnsource}[2]{
+  \textbf{\footnotesize{#1}} {\footnotesize{#2}}\break
 }
 
 % figure note
-\newcommand{\urbnnote}[1]{
-  \textbf{\footnotesize{#1}} \break
+\newcommand{\urbnnote}[2]{
+  \textbf{\footnotesize{#1}} {\footnotesize{#2}}\break
 }
 
 % table label
@@ -167,7 +187,7 @@
 \renewcommand{\labelitemiv}{\color{urbnblue}\tiny$\blacksquare$}  % blue square
 
 \newenvironment{urbnbullets}
-{\begin{itemize}[leftmargin=*,labelindent=0.25in,labelsep=0.1875in]
+{\begin{itemize}[leftmargin=*,labelindent=0in,labelsep=0.1875in]
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \setlength{\parsep}{0pt}}
@@ -205,3 +225,11 @@
 
 % sets midline at 1pt
 \setlength{\lightrulewidth}{1pt}
+
+\newcommand{\pastegraph}[0]{
+  \begin{figure}
+    \hspace{2in}
+    \includegraphics[width=3in]{Plots/Alabama_plot.pdf}
+    \label{fig:boat1}
+  \end{figure}
+}
