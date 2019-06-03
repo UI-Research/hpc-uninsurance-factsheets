@@ -264,8 +264,8 @@ table <- table1 %>%
 # table <- table1 %>%
 #   filter(statename == "Tennessee")
 # apply formats
-table[,grep("_share",colnames(table))]<-format(round(table[,grep("_share",colnames(table))]*100,2),big.mark=",")
-table[,grep("_mn",colnames(table))]<-format(round(table[,grep("_mn",colnames(table))]*100,2),big.mark=",")
+table[,grep("_share",colnames(table))]<-format(round(table[,grep("_share",colnames(table))]*100,1),big.mark=",")
+table[,grep("_mn",colnames(table))]<-format(round(table[,grep("_mn",colnames(table))]*100,1),big.mark=",")
 # table[,grep("_n",colnames(table))]<-format(table[,grep("_n",colnames(table))],big.mark=",")
 if (table$note != 3 | table$note != 5) {
   caption1 <- "Some uninsured women in all categories may be eligible for or enrolled in a Medicaid plan that covers family planning services only. Some uninsured women in all categories may be eligible for or enrolled in a Medicaid plan that covers family planning services only. "
@@ -286,7 +286,7 @@ if (table$expansion == 0) {
   lookingahead<-paste("Expanding Medicaid would likely benefit approximately ", table$ui_mn ," percent of uninsured ",table$statename," women of reproductive age, including currently ineligible citizens with incomes below the FPL (", table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
 }
 if (table$expansion == 1) {
-  lookingahead<-paste("Following Medicaid expansion in ",table$statename, ", the uninsurance rate fell from", table$ui_mn13 ," percent in 2013 to ", table$ui_mn, " percent in 2017. Despite coverage gains, approximately ", table$ui_n, " ", table$statename," women of reproductive age remained uninsured in 2017.",sep='')
+  lookingahead<-paste("Following Medicaid expansion in ",table$statename, ", the uninsurance rate fell from ", table$ui_mn13 ," percent in 2013 to ", table$ui_mn, " percent in 2017. Despite coverage gains, approximately ", statement7, " ", table$statename," women of reproductive age remained uninsured in 2017.",sep='')
 }
 ```
 \newpage
@@ -395,7 +395,7 @@ ggplot(table2) +
 \vspace{-0.5cm}
 Some women may remain uninsured because they lack an affordable coverage option, but others may not enroll in an affordable Medicaid, Children’s Health Insurance Program, or Marketplace plan because of a lack of awareness of their eligibility, administrative burdens, or concerns about enrolling in a public program. 
 
-Among approximately `r table$ui_n` uninsured women of reproductive age in `r table$statename` in 2017 (figure 2),
+Among approximately `r statement7` uninsured women of reproductive age in `r table$statename` in 2017 (figure 2),
 
 \begin{urbnbullets}
   \item about `r table$hier_medicaid_share` percent were likely eligible for comprehensive Medicaid or Children’s Health Insurance Program coverage based on their income;
