@@ -1,0 +1,443 @@
+---
+header-includes:
+- \input{preamble.tex}
+fontsize: 11pt
+output: pdf_document
+sansfont: Lato
+font:     Lato
+geometry: "left=1in,right=1in,top=0.35in,bottom=0.6in"
+urlcolor: #169d62
+params:
+  parameter1: NA
+---
+
+\raggedright
+
+```{r rmarkdown-setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(dev = "cairo_pdf")
+options(knitr.kable.NA = "")
+options(kableExtra.latex.load_packages = FALSE)
+
+library(scales)
+library(ggforce)
+library(forcats)
+library(stringr)
+library(ggrepel)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(urbnthemes)
+
+set_urbn_defaults(style = "print")
+
+state_table <- table1 %>%
+  filter(statename == params$parameter1)  
+country_table <- table1 %>%
+  filter(statename == "US") 
+
+is_small <- state_table$small
+is_large <- !(is_small)
+
+# apply formats to state_table
+state_table[,grep("_mn",colnames(state_table))]<-round(as.numeric(state_table[,grep("_mn",colnames(state_table))]*100), 1)
+state_table[,grep("_n",colnames(state_table))]<-as.numeric(state_table[,grep("_n",colnames(state_table))])
+state_table[,grep("_tstat",colnames(state_table))]<-as.numeric(state_table[,grep("_tstat",colnames(state_table))])
+
+# apply formats to country_table
+country_table[,grep("_mn",colnames(country_table))]<-round(as.numeric(country_table[,grep("_mn",colnames(country_table))]*100), 1)
+country_table[,grep("_n",colnames(country_table))]<-as.numeric(country_table[,grep("_n",colnames(country_table))])
+country_table[,grep("_tstat",colnames(state_table))]<-as.numeric(country_table[,grep("_tstat",colnames(country_table))])
+
+#gather state data ending in _mn
+state_mn_data <- state_table %>% 
+  select(ends_with("_mn")) %>% 
+  gather(key="var",value="mn_value")
+
+#join state _tstat data with _mn data 
+state_data_with_tstats <- state_table %>% 
+  select(ends_with("_tstat")) %>% 
+  gather(key="var",value="tstat_value") %>%
+  mutate(var = paste(str_sub(var, 1, str_length(var)-6), "_mn", sep="")) %>%
+  left_join(state_mn_data, by = c("var"="var"))
+
+#join state _n data with _mn and _tstat data 
+state_data_with_n <- state_table %>% 
+  select(ends_with("_n")) %>% 
+  gather(key="var",value="n_value") %>%
+  mutate(var = paste(str_sub(var, 1, str_length(var)-2), "_mn", sep="")) %>%
+  left_join(state_data_with_tstats, by = c("var"="var"))
+
+#combine all data for state, join pie labels and language for text
+total_state_data_with_labels <- datdict %>%
+  select(Variable.Name, Label.for.Figures, Language.for.Text) %>%
+  right_join(state_data_with_n, by = c("Variable.Name"="var")) 
+
+total_state_data_with_labels$location <- toString(state_table$statename)
+
+#gather country data ending in _mn
+country_mn_data <- country_table %>% 
+  select(ends_with("_mn")) %>% 
+  gather(key="var",value="mn_value")
+
+#join country _tstat data with _mn data 
+country_data_with_tstats <- country_table %>% 
+  select(ends_with("_tstat")) %>% 
+  gather(key="var",value="tstat_value") %>%
+  mutate(var = paste(str_sub(var, 1, str_length(var)-6), "_mn", sep="")) %>%
+  left_join(country_mn_data, by = c("var"="var"))
+
+#join country _n data with _mn and _tstat data 
+country_data_with_n <- country_table %>% 
+  select(ends_with("_n")) %>% 
+  gather(key="var",value="n_value") %>%
+  mutate(var = paste(str_sub(var, 1, str_length(var)-2), "_mn", sep="")) %>%
+  left_join(country_data_with_tstats, by = c("var"="var"))
+
+#combine all data for country, join pie labels and language for text
+total_country_data_with_labels <- datdict %>%
+  select(Variable.Name, Label.for.Figures, Language.for.Text) %>%
+  right_join(country_data_with_n, by = c("Variable.Name"="var")) 
+
+total_country_data_with_labels$location <- 'US'
+
+all_data <- rbind(total_country_data_with_labels, total_state_data_with_labels) %>%
+  filter(Variable.Name != "hier_mn")
+
+if(state_table$expansion == 0){
+  if (state_table$note == 0) {
+    statement1 <- "which did not expand Medicaid under the Affordable Care Act"
+  } else if (state_table$note == 1) {
+    statement1 <- "which expanded Medicaid under the Affordable Care Act after 2017" 
+  } else if (state_table$note == 2) {
+    statement1 <- "which has voted to expand but not yet implemented Medicaid expansion under the Affrdable Care Act" 
+  }
+} else{
+    statement1 <- "which expanded Medicaid under the Affordable Care Act" 
+}
+
+if ( state_table$ui_mn > country_table$ui_mn) {
+statement2 <- "higher"
+statement3 <- "than"
+} else if ( state_table$ui_mn < country_table$ui_mn) {
+statement2 <- "lower"
+statement3 <- "than"
+} else {
+statement2 <- "similar"
+statement3 <- "to"
+}
+
+statement4_frame <- all_data %>% 
+  filter(location==state_table$statename) %>% 
+  filter(mn_value > state_table$ui_mn) %>% 
+  filter(tstat_value>=1.960 ) %>%
+  select(Language.for.Text, mn_value, tstat_value)
+statement4_list <- statement4_frame[["Language.for.Text"]] 
+
+start <- paste(statement4_list[1:length(statement4_list)-1], collapse = ", ")
+end <- statement4_list[length(statement4_list)]
+
+if(length(statement4_list) == 1){
+  statement4 <- paste0(" ", end)
+} else if (length(statement4_list) == 2){
+  statement4 <- paste0(" ", start, " and ", end)
+} else
+  statement4 <- paste0(" ", start, ", and ", end)
+
+if (state_table$expansion == 1){
+  statement5 <- "further expanding access to Medicaid or other highly subsidized insurance, as well as targeted outreach and enrollment efforts to subgroups of already eligible women with the highest uninsurance rates."
+} else{
+  statement5 <- "expanding access to Medicaid or other highly subsidized insurance, as well as targeted outreach and enrollment efforts to subgroups of already eligible women with the highest uninsurance rates."
+}
+
+if(state_table$ui_n >= 1000000){
+  statement7 <- paste(round(state_table$ui_n/1000000, 1), "million", " ")
+} else{
+  statement7 <- statement7 <- prettyNum(round(state_table$ui_n, -3),big.mark=",",scientific=FALSE)
+}
+
+if(state_table$statename == "the District of Columbia"){
+  statement8 <- "DC"
+} else{
+  statement8 <- state_table$statename
+}
+```
+
+```{r echo=FALSE}
+#Add blank data for spaces in chart
+Label.for.Figures = c('space1', 'space2', 'space3','space4','space5','space6')
+blank_data_for_chart <- data.frame(Label.for.Figures)
+blank_data_for_chart$mn_value = 0
+blank_data_for_chart$location = 'US'
+blank_data_for_chart$n_value = 0
+
+#Obtain data rows that have sample size below 200 sample size
+state_data_below_200_n <- all_data %>%
+  filter(n_value<200) 
+
+#If there are rows with sample size < 200, set statement 6
+if(nrow(state_data_below_200_n) > 0){
+  statement6 <- " Subgroups with no state estimate had a sample size smaller than 200."
+} else{
+  statement6 <- ""
+}
+
+#Obtain columns needed for chart, set all mn_value with sample size<0 to 0, bind blank data rows  
+total_data_for_chart <- all_data %>%
+  select(Label.for.Figures, mn_value, n_value, location) %>%
+  mutate(mn_value=ifelse(Label.for.Figures %in% state_data_below_200_n$Label.for.Figures & location==state_table$statename,0,mn_value)) %>%
+  rbind(blank_data_for_chart)
+
+#Factor order for subgroups on plot x axis
+plot_order <- c("Not in labor force", "Unemployed", "Employed", "space6","Not in metropolitan area", "In metropolitan area", "space5","Above 400% FPL", "251%–400% FPL", "139%–250% FPL", "0%–138% FPL", "space4", "Single, childless", "Married, childless", "Single mother", "Married mother", "space3", "Other/multiple races", "Hispanic", "Black", "White", "space2", "Ages 35–44", "Ages 26–34", "Ages 19–25", "Ages 15–18", "space1", "All women (ages 15-44)")
+
+#Factor order for location on plot x axis
+state_order <- c("US", as.character(state_table$statename))
+
+#Generate bar chart
+state_plot <- total_data_for_chart %>%
+  mutate(location = factor(as.character(location), levels = state_order)) %>%
+  mutate(Label.for.Figures = factor(Label.for.Figures, levels = plot_order)) %>%
+  ggplot(aes(x=Label.for.Figures, y=mn_value, fill=location)) +
+  geom_col(position=position_dodge()) +
+  geom_text(aes(x = Label.for.Figures, y = mn_value, label=ifelse(location==as.character(state_table$statename) & mn_value>0,paste0(mn_value,"%"),'')), position = position_dodge(width = 1), hjust = -.25, size = 2) +
+  theme(
+  plot.title = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  axis.line.x=element_blank(),
+  axis.line.y = element_line(colour = "black"),
+  axis.text.x = element_blank(),
+  axis.ticks.x = element_blank(),
+  panel.grid.minor.y = element_blank(),
+  panel.grid.major.y = element_blank(),
+  legend.direction = "vertical",
+  legend.position = c(.7, .975)) +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,50)) +
+  guides(fill = guide_legend(reverse=TRUE)) +
+  scale_fill_manual(values = c("#fdbf11", "#1696d2")) +
+  scale_x_discrete(name ="Labels", c("Not in labor force", "Unemployed", "Employed", " ","Not in metropolitan area", "In metropolitan area", " ","Above 400% FPL", "251%–400% FPL", "139%–250% FPL", "0%–138% FPL", " ", "Single, childless", "Married, childless", "Single mother", "Married mother", " ", "Other/multiple races", "Hispanic", "Black", "White", " ", "Ages 35–44", "Ages 26–34", "Ages 19–25", "Ages 15–18", " ", "All women (ages 15-44)"))+
+  coord_flip()
+
+ggsave("state_plot.pdf", plot = state_plot, path = "Plots", scale = 1, width =5, height = 6.5, units = "in", device = cairo_pdf)
+
+```
+
+\urbnlogo{}
+\urbntitle{Insurance Coverage among Women of Reproductive Age in `r state_table$statename`}
+
+The Affordable Care Act established several provisions aimed at reducing the uninsurance rate, and the number of uninsured women of reproductive age (15–44) in the United States fell from 12.7 million in 2013 to 7.5 million in 2017.
+
+In `r state_table$statename`, `r statement1`, the uninsurance rate fell from `r state_table$ui_mn13` percent in 2013 to `r state_table$ui_mn` percent in 2017. Despite these gains, approximately `r statement7` `r statement8` women of reproductive age remained uninsured in 2017.
+
+\vspace{-0.4in}
+\urbnheadingone{Uninsurance Rate among Subgroups of Women in `r state_table$statename` and the US, 2017}
+\columnratio{0.45}
+\begin{paracol}{2}
+Uninsured women are vulnerable to well-documented access, affordability, and health problems associated with lacking insurance coverage, including potentially limited access to family planning and other reproductive health services.
+\begin{itemize} [noitemsep,wide=0pt, leftmargin=\dimexpr\labelwidth + 2\labelsep\relax]
+\setlength\itemsep{1em}
+\item Women of reproductive age in `r state_table$statename` had a `r statement2` uninsurance rate (`r state_table$ui_mn` percent) `r statement3` similar women nationwide (11.7 percent) in 2017 (figure 1).
+\item Within `r state_table$statename`,`r statement4` had higher uninsurance rates than the state average for all women of reproductive age in 2017.
+``` {r results = "asis", eval = is_large} 
+cat("\\item Reducing the uninsurance rate among women of reproductive age in ", params$parameter1, " may require ", statement5)
+```
+\end{itemize}
+``` {r results = "asis", eval = is_small} 
+cat("\\urbnheadingone{Looking ahead} 
+    \\newline Reducing the uninsurance rate among women of reproductive age in ", params$parameter1, " may require ", statement5, " It will also be critical to track women’s ability to access the general and reproductive health services they need, including monitoring the availability and capacity of community health centers and Title X clinics.")
+```
+\switchcolumn
+\urbntabletitle{Figure 1. Uninsurance Rate among Subgroups of Women of Reproductive Age in `r state_table$statename` and the US, 2017}
+\includegraphics[width=3.7in]{Plots/state_plot.pdf}
+\urbnsource{Source:} {Urban Institute analysis of 2017 American Community Survey.}
+\urbnnote{Note:} {FPL is federal poverty level. White, black, and other/multiple race are non-Hispanic.`r statement6` Differences reported in text are significant at p < 0.05.}
+\end{paracol}
+\footnoteui{}
+\contactinfo{}
+
+```{r}
+set_urbn_defaults(style = "print")
+row.names(datdict)<-datdict$Variable.Name
+pie_labels<-datdict[c("hier_pov_none_share", "hier_noncit400pl_share","hier_mktplce_share","hier_medicaid_share"),]["Label.for.Figures"]
+pie_labels$var<-row.names(pie_labels)
+pie_labs<-pie_labels %>% mutate(lab_for_figs = as.character(Label.for.Figures)) %>% select(var, lab_for_figs)
+table <- table1 %>%
+  filter(statename == params$parameter1)
+# will need to be in iterate.R
+# table1 <- read.csv(file="Tables/StateFactSheetData.csv", header=TRUE, sep=",")
+# datdict <- read.csv(file="Tables/State Uninsurance WRA Data Dictionary.csv", header=TRUE, sep=",")
+# row.names(datdict)<-datdict$Variable.Name
+# pie_labels<-datdict[c("hier_pov_none_share", "hier_noncit400pl_share","hier_mktplce_share","hier_medicaid_share"),]["Label.for.Figures"]
+# pie_labels$var<-row.names(pie_labels)
+# pie_labs<-pie_labels %>% mutate(lab_for_figs = as.character(Label.for.Figures)) %>% select(var, lab_for_figs)
+# colnames(table1)[1]<-"statename"
+# table <- table1 %>%
+#   filter(statename == "Tennessee")
+# apply formats
+table[,grep("_share",colnames(table))]<-format(round(table[,grep("_share",colnames(table))]*100,1),big.mark=",")
+table[,grep("_mn",colnames(table))]<-format(round(table[,grep("_mn",colnames(table))]*100,1),big.mark=",")
+# table[,grep("_n",colnames(table))]<-format(table[,grep("_n",colnames(table))],big.mark=",")
+if (table$note != 3 | table$note != 5) {
+  caption1 <- "Some uninsured women in all categories may be eligible for or enrolled in a Medicaid plan that covers family planning services only. Some uninsured women in all categories may be eligible for or enrolled in a Medicaid plan that covers family planning services only. "
+}
+if (table$note == 3 | table$note == 5) {
+  caption1 <- ""
+}
+if (table$note == 5) {
+  caption2 <- "Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through the state's Basic Health Program. "
+}
+if (table$note == 4) {
+    caption2 <- "Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through the state's Basic Health Program. " 
+}
+if (table$note != 4 | table$note != 5) {
+    caption2 <- ""
+}
+if (table$expansion == 0) {
+  lookingahead<-paste("Expanding Medicaid would likely benefit approximately ", table$ui_mn ," percent of uninsured ",table$statename," women of reproductive age, including currently ineligible citizens with incomes below the FPL (", table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
+}
+if (table$expansion == 1) {
+  lookingahead<-paste("Following Medicaid expansion in ",table$statename, ", the uninsurance rate fell from ", table$ui_mn13 ," percent in 2013 to ", table$ui_mn, " percent in 2017. Despite coverage gains, approximately ", statement7, " ", table$statename," women of reproductive age remained uninsured in 2017.",sep='')
+}
+```
+
+``` {r results = "asis", eval = is_large}
+cat("\\newpage
+\\raggedright
+\\urbnlogo{}
+\\urbnfigurenumber{2}
+\\urbnfiguretitle{Potential Eligibility for Financial Assistance Obtaining Coverage among Uninsured Women of Reproductive Age in ", params$parameter1, " 2017}")
+```
+
+```{r, fig.width=7.5, fig.height=2.25, fig.fullwidth=TRUE, eval = is_large}
+#to force the same color for payment type in all figures
+type<-factor(levels=c("hier_pov_none_share", "hier_noncit400pl_share","hier_mktplce_share","hier_medicaid_share"))
+myColors <- c("#fdbf11","#1696d2","#000000","#ec008b")
+names(myColors) <- levels(type)
+t<-table %>% 
+  select(hier_pov_none_share, hier_noncit400pl_share,hier_mktplce_share,hier_medicaid_share) %>% 
+  gather(key="var",value="value") %>% 
+  left_join(pie_labs) %>% 
+  filter(value>0)
+t$lab_for_figs_brks<-sapply(strwrap(t$lab_for_figs, 35, simplify=FALSE), paste, collapse="\n" )
+# table2<-t %>% 
+#   mutate(labels_w_num = paste(lab_for_figs_brks, " \n",as.character(value), "%", sep =""), 
+#          value = as.numeric(value),
+#          end = 2 * pi * cumsum(value)/sum(value),
+#          start = lag(end, default = 0),
+#          middle = 0.5 * (start + end),
+#          hjust = ifelse(middle < pi, 1, 0),
+#          vjust = ifelse(middle > pi/2 | middle > 3 * pi/2, 0, 1))
+# 
+# ggplot(table2) + 
+#   geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0, r = 1,
+#                    start = start, end = end, fill = var),color = "white") +
+  # geom_text(mapping = aes(x = ifelse(sin(table2$middle) > 0 & cos(table2$middle) > 0, sin(table2$end), #+x,+y
+  #                           ifelse(sin(table2$middle) > 0 & cos(table2$middle) < 0, sin(table2$end),#+x,-y
+  #                           ifelse(sin(table2$middle) < 0 & cos(table2$middle) < 0, sin(table2$start), #-x,-y
+  #                           ifelse(sin(table2$middle) > 0, sin(table2$start)+3, #+x
+  #                           sin(table2$end)-3)))),
+  #                         y = ifelse(sin(table2$middle) > 0 &cos(table2$middle) > 0 , cos(table2$start), #+x,+y
+  #                             ifelse(sin(table2$middle) > 0 & cos(table2$middle) < 0, cos(table2$middle), #+x,-y
+  #                             ifelse(sin(table2$middle) < 0 & cos(table2$middle) < 0, cos(table2$start), #-x,-y
+  #                             cos(table2$start)-0.25))),
+  #                         label = labels_w_num,
+  #                         hjust = hjust,
+  #                         vjust = vjust),
+  #           size = 3) +
+  # geom_segment(x=sin(table2$middle),
+  #              y=cos(table2$middle),
+  #              xend=ifelse(sin(table2$middle) > 0 & cos(table2$middle) > 0, sin(table2$start)+1.5, #+x,+y
+  #                           ifelse(sin(table2$middle) > 0 & cos(table2$middle) < 0, sin(table2$start)+0.5,#+x,-y
+  #                           ifelse(sin(table2$middle) < 0 & cos(table2$middle) < 0, sin(table2$start)-1.5, #-x,-y
+  #                           ifelse(sin(table2$middle) > 0, sin(table2$start)+3, #+x
+  #                           sin(table2$end)-1.5)))),
+  #              yend=ifelse(sin(table2$middle) > 0 &cos(table2$middle) > 0 , cos(table2$start), #+x,+y
+  #                           ifelse(sin(table2$middle) > 0 & cos(table2$middle) < 0, cos(table2$middle)+0.25, #+x,-y
+  #                           ifelse(sin(table2$middle) < 0 & cos(table2$middle) < 0, cos(table2$middle)-0.25, #-x,-y
+  #                           cos(table2$start)-0.25))),
+  #              size=0.5)+
+  # scale_fill_manual(values = c("#1696d2", "#1696d2", "#1696d2", "#1696d2")) +
+  # coord_fixed() +
+  # scale_x_continuous(limits = c(-3.5, 5),  # Adjust so labels are not cut off
+  #                    name = "", breaks = NULL, labels = NULL) +
+  # scale_y_continuous(limits = c(-1,1.25),      # Adjust so labels are not cut off
+  #                    name = "", breaks = NULL, labels = NULL)+
+  # remove_ticks() +
+  # remove_axis() + 
+  # theme(legend.position = "none") 
+table2<-t %>% 
+  mutate(labels_w_num = paste(lab_for_figs_brks, " \n",as.character(value), "%", sep =""), 
+         value = as.numeric(value),
+         label_position = cumsum(value),
+         end = 2 * pi * cumsum(value)/sum(value),
+         start = lag(end, default = 0),
+         middle = 0.5 * (start + end),
+         nudgex = ifelse(middle < pi, 3, -3),
+         nudgey = ifelse(middle < pi/2 | middle > pi*1.3, -0.25, 0.25),
+         hjust = ifelse(middle > pi, 1, 0),
+         vjust = ifelse(middle < pi/2 | middle > 3 * pi/2, 0, 1))
+par(mar=rep(0,4))
+ggplot(table2) + 
+  geom_arc_bar(aes(x0 = 0, y0 = 0, r0 = 0, r = 1,
+                   start = start, end = end, fill = var),color = "white") +
+  geom_text_repel(mapping = aes(x = 1.05 * sin(middle), 
+                          y = 1.05 * cos(middle), 
+                          label = labels_w_num,
+                          hjust = hjust,
+                          vjust = vjust),
+            size = 3,
+            nudge_x = table2$nudgex,
+            nudge_y = table2$nudgey,
+            segment.color = "grey50") +
+  scale_fill_manual(values=myColors) +
+  coord_fixed() +
+  scale_x_continuous(limits = c(-4,4),  # Adjust so labels are not cut off
+                     name = "", breaks = NULL, labels = NULL) +
+  scale_y_continuous(limits = c(-1.25,1.25),      # Adjust so labels are not cut off
+                     name = "", breaks = NULL, labels = NULL)+
+  remove_ticks() +
+  remove_axis() + 
+  theme(legend.position = "none") 
+
+# ggsave("fig.pdf",plot = p, device = cairo_pdf, path = paste(getwd(),"/design",sep=''),
+       # scale = 1,dpi = 300, width = 5, height = 2.5)
+```
+``` {r results = "asis", eval = is_large}
+cat("\\vspace{-0.4in}
+\\break")
+```
+
+``` {r results = "asis", eval = is_large}
+cat("\\urbnsource{Source:}{Urban Institute analysis of 2017 American Community Survey.} 
+\\urbnnote{Note:}{CHIP is the Children's Health Insurance Program. For detailed category definitions, see Health Insurance Coverage for Women of Reproductive Age, 2017. ", caption1, " ", caption2, " Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through a state-specific program.}
+\\vspace{-0.4cm}") 
+```
+
+``` {r results = "asis", eval = is_large}
+cat("Some women may remain uninsured because they lack an affordable coverage option, but others may not enroll in an affordable Medicaid, Children’s Health Insurance Program, or Marketplace plan because of a lack of awareness of their eligibility, administrative burdens, or concerns about enrolling in a public program. 
+Among approximately ", statement7, " uninsured women of reproductive age in ", params$parameter1, " in 2017 (figure 2),")
+```
+
+``` {r results = "asis", eval = is_large}
+cat("\\begin{urbnbullets}
+\\item about ", table$hier_medicaid_share, " percent were likely eligible for comprehensive Medicaid or Children’s Health Insurance Program coverage based on their income;
+\\item another ", table$hier_mktplce_share, " percent were likely eligible for assistance with premiums for Marketplace coverage based on their income, including ", table$hier_100_138_share, " percent with incomes between 100 and 138 percent of the FPL;
+\\item about ", table$hier_pov_none_share, " percent were women with incomes below the FPL who were likely ineligible for assistance obtaining comprehensive Medicaid, Children’s Health Insurance Program, or Marketplace coverage; and
+\\item about ", table$hier_noncit400pl_share, " percent were likely ineligible for assistance obtaining comprehensive health insurance, including noncitizens, (",table$hier_noncit_share, " percent) and women with incomes above 400 percent of the FPL (",table$hier_400pl_share, " percent). 
+\\end{urbnbullets}
+\\vspace{-0.8cm}")
+```
+
+``` {r results = "asis", eval = is_large}
+cat("\\urbnheadingone{Looking Ahead} ",
+"\\newline ", lookingahead, "In addition to continuing to monitor the uninsurance rate, it will be critical to track women’s ability to access the general and reproductive health services they need. This will include monitoring the availability and capacity of providers that disproportionately serve low-income and uninsured women, such as community health centers and Title X clinics.	
+<!-- Expanding Medicaid would likely benefit approximately ", table$ui_mn, " percent of uninsured ", table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (", table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (", table$hier_100_138_share, "percent) for whom Medicaid may be more affordable than Marketplace coverage. Outreach and enrollment efforts targeted at subgroups of women with high uninsurance rates and those already eligible for assistance could also help reduce the uninsurance rate in `r table$statename`, though higher subsidies may be required to help address affordability barriers. -->
+\\footnoteui{}
+\\contactinfo{}")
+```
+
+
