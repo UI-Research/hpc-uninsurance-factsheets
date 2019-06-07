@@ -118,16 +118,16 @@ if(state_table$expansion == 0){
     statement1 <- "which expanded Medicaid under the Affordable Care Act" 
 }
 
-if ( state_table$ui_mn > country_table$ui_mn) {
+if( state_table$ui_tstat<1.960 | state_table$ui_mn==country_table$ui_mn) {
+statement2 <- "similar"
+statement3 <- "to" 
+} else if ( state_table$ui_mn > country_table$ui_mn) {
 statement2 <- "higher"
 statement3 <- "than"
 } else if ( state_table$ui_mn < country_table$ui_mn) {
 statement2 <- "lower"
 statement3 <- "than"
-} else {
-statement2 <- "similar"
-statement3 <- "to"
-}
+} 
 
 statement4_frame <- all_data %>% 
   filter(location==state_table$statename) %>% 
@@ -184,7 +184,7 @@ if(nrow(state_data_below_200_n) > 0){
   statement6 <- ""
 }
 
-#Obtain columns needed for chart, set all mn_value with sample size<0 to 0, bind blank data rows  
+#Obtain columns needed for chart, set all mn_value with sample size<200 to 0, bind blank data rows  
 total_data_for_chart <- all_data %>%
   select(Label.for.Figures, mn_value, n_value, location) %>%
   mutate(mn_value=ifelse(Label.for.Figures %in% state_data_below_200_n$Label.for.Figures & location==state_table$statename,0,mn_value)) %>%
@@ -202,7 +202,7 @@ state_plot <- total_data_for_chart %>%
   mutate(Label.for.Figures = factor(Label.for.Figures, levels = plot_order)) %>%
   ggplot(aes(x=Label.for.Figures, y=mn_value, fill=location)) +
   geom_col(position=position_dodge()) +
-  geom_text(aes(x = Label.for.Figures, y = mn_value, label=ifelse(location==as.character(state_table$statename) & mn_value>0,paste0(mn_value,"%"),'')), position = position_dodge(width = 1), hjust = -.25, size = 2) +
+  geom_text(aes(x = Label.for.Figures, y = mn_value, label=ifelse(location==as.character(state_table$statename) & mn_value>0,paste0(mn_value,"%"),'')), position = position_dodge(width = 1), hjust = -.25, size = 3) +
   theme(
   plot.title = element_blank(),
   axis.title.x = element_blank(),
@@ -220,6 +220,7 @@ state_plot <- total_data_for_chart %>%
   guides(fill = guide_legend(reverse=TRUE)) +
   scale_fill_manual(values = c("#fdbf11", "#1696d2")) +
   scale_x_discrete(name ="Labels", c("Not in labor force", "Unemployed", "Employed", " ","Not in metropolitan area", "In metropolitan area", " ","Above 400% FPL", "251%–400% FPL", "139%–250% FPL", "0%–138% FPL", " ", "Single, childless", "Married, childless", "Single mother", "Married mother", " ", "Other/multiple races", "Hispanic", "Black", "White", " ", "Ages 35–44", "Ages 26–34", "Ages 19–25", "Ages 15–18", " ", "All women (ages 15-44)"))+
+  scale_fill_manual(labels = c("very negative", "kinda negative"))+
   coord_flip()
 
 ggsave("state_plot.pdf", plot = state_plot, path = "Plots", scale = 1, width =5, height = 6.5, units = "in", device = cairo_pdf)
@@ -406,13 +407,12 @@ ggplot(table2) +
 # ggsave("fig.pdf",plot = p, device = cairo_pdf, path = paste(getwd(),"/design",sep=''),
        # scale = 1,dpi = 300, width = 5, height = 2.5)
 ```
-``` {r results = "asis", eval = is_large}
-cat("\\vspace{-0.4in}
-\\break")
-```
+
 
 ``` {r results = "asis", eval = is_large}
-cat("\\urbnsource{Source:}{Urban Institute analysis of 2017 American Community Survey.} 
+cat(
+"\\vspace{-0.4in}
+\\urbnsource{Source:}{Urban Institute analysis of 2017 American Community Survey.} 
 \\urbnnote{Note:}{CHIP is the Children's Health Insurance Program. For detailed category definitions, see Health Insurance Coverage for Women of Reproductive Age, 2017. ", caption1, " ", caption2, " Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through a state-specific program.}
 \\vspace{-0.4cm}") 
 ```
