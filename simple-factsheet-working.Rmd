@@ -188,13 +188,16 @@ if(nrow(state_data_below_200_n) > 0){
 total_data_for_chart <- all_data %>%
   select(Label.for.Figures, mn_value, n_value, location) %>%
   mutate(mn_value=ifelse(Label.for.Figures %in% state_data_below_200_n$Label.for.Figures & location==state_table$statename,0,mn_value)) %>%
+    mutate(location=ifelse(location=="the District of Columbia","DC",location)) %>%
   rbind(blank_data_for_chart)
 
 #Factor order for subgroups on plot x axis
 plot_order <- c("Not in labor force", "Unemployed", "Employed", "space6","Not in metropolitan area", "In metropolitan area", "space5","Above 400% FPL", "251%–400% FPL", "139%–250% FPL", "0%–138% FPL", "space4", "Single, childless", "Married, childless", "Single mother", "Married mother", "space3", "Other/multiple races", "Hispanic", "Black", "White", "space2", "Ages 35–44", "Ages 26–34", "Ages 19–25", "Ages 15–18", "space1", "All women (ages 15-44)")
 
+state_for_chart <- ifelse(state_table$statename=="the District of Columbia","DC",as.character(state_table$statename))
+
 #Factor order for location on plot x axis
-state_order <- c("US", as.character(state_table$statename))
+state_order <- c("US", state_for_chart)
 
 #Generate bar chart
 state_plot <- total_data_for_chart %>%
@@ -202,8 +205,9 @@ state_plot <- total_data_for_chart %>%
   mutate(Label.for.Figures = factor(Label.for.Figures, levels = plot_order)) %>%
   ggplot(aes(x=Label.for.Figures, y=mn_value, fill=location)) +
   geom_col(position=position_dodge()) +
-  geom_text(aes(x = Label.for.Figures, y = mn_value, label=ifelse(location==as.character(state_table$statename) & mn_value>0,paste0(mn_value,"%"),'')), position = position_dodge(width = 1), hjust = -.25, size = 3) +
+  geom_text(aes(x = Label.for.Figures, y = mn_value, label=ifelse(location!="US" & mn_value>0,paste0(format(mn_value, digits=1, nsmall=1),"%"),'')), position = position_dodge(width = 1), hjust = -.25, size = 3) +
   theme(
+  axis.text.y=element_text(size=10),
   plot.title = element_blank(),
   axis.title.x = element_blank(),
   axis.title.y = element_blank(),
@@ -214,13 +218,12 @@ state_plot <- total_data_for_chart %>%
   panel.grid.minor.y = element_blank(),
   panel.grid.major.y = element_blank(),
   legend.direction = "vertical",
-  legend.position = c(.7, .975)) +
+  legend.position = c(.85, .975)) +
   scale_y_continuous(expand = c(0,0),
-                     limits = c(0,50)) +
+                     limits = c(0,60)) +
   guides(fill = guide_legend(reverse=TRUE)) +
   scale_fill_manual(values = c("#fdbf11", "#1696d2")) +
   scale_x_discrete(name ="Labels", c("Not in labor force", "Unemployed", "Employed", " ","Not in metropolitan area", "In metropolitan area", " ","Above 400% FPL", "251%–400% FPL", "139%–250% FPL", "0%–138% FPL", " ", "Single, childless", "Married, childless", "Single mother", "Married mother", " ", "Other/multiple races", "Hispanic", "Black", "White", " ", "Ages 35–44", "Ages 26–34", "Ages 19–25", "Ages 15–18", " ", "All women (ages 15-44)"))+
-  scale_fill_manual(labels = c("very negative", "kinda negative"))+
   coord_flip()
 
 ggsave("state_plot.pdf", plot = state_plot, path = "Plots", scale = 1, width =5, height = 6.5, units = "in", device = cairo_pdf)
@@ -232,7 +235,7 @@ ggsave("state_plot.pdf", plot = state_plot, path = "Plots", scale = 1, width =5,
 
 The Affordable Care Act established several provisions aimed at reducing the uninsurance rate, and the number of uninsured women of reproductive age (15–44) in the United States fell from 12.7 million in 2013 to 7.5 million in 2017.
 
-In `r state_table$statename`, `r statement1`, the uninsurance rate fell from `r state_table$ui_mn13` percent in 2013 to `r state_table$ui_mn` percent in 2017. Despite these gains, approximately `r statement7` `r statement8` women of reproductive age remained uninsured in 2017.
+In `r state_table$statename`, `r statement1`, the uninsurance rate fell from `r format(state_table$ui_mn13, digits=1, nsmall=1)` percent in 2013 to `r format(state_table$ui_mn, digits=1, nsmall=1)` percent in 2017. Despite these gains, approximately `r statement7` `r statement8` women of reproductive age remained uninsured in 2017.
 
 \vspace{-0.4in}
 \urbnheadingone{Uninsurance Rate among Subgroups of Women in `r state_table$statename` and the US, 2017}
@@ -241,7 +244,7 @@ In `r state_table$statename`, `r statement1`, the uninsurance rate fell from `r 
 Uninsured women are vulnerable to well-documented access, affordability, and health problems associated with lacking insurance coverage, including potentially limited access to family planning and other reproductive health services.
 \begin{itemize} [noitemsep,wide=0pt, leftmargin=\dimexpr\labelwidth + 2\labelsep\relax]
 \setlength\itemsep{1em}
-\item Women of reproductive age in `r state_table$statename` had a `r statement2` uninsurance rate (`r state_table$ui_mn` percent) `r statement3` similar women nationwide (11.7 percent) in 2017 (figure 1).
+\item Women of reproductive age in `r state_table$statename` had a `r statement2` uninsurance rate (`r format(state_table$ui_mn, digits=1, nsmall=1)` percent) `r statement3` similar women nationwide (11.7 percent) in 2017 (figure 1).
 \item Within `r state_table$statename`,`r statement4` had higher uninsurance rates than the state average for all women of reproductive age in 2017.
 ``` {r results = "asis", eval = is_large} 
 cat("\\item Reducing the uninsurance rate among women of reproductive age in ", params$parameter1, " may require ", statement5)
