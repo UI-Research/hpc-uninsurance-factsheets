@@ -6,7 +6,6 @@ table1 <- read.csv(file="Tables/StateFactSheetData_521.csv", header=TRUE, sep=",
 table2 <- read.csv(file="Tables/State Uninsurance WRA Data Dictionary_227.csv", header=TRUE, sep=",")
 
 index <- as.character(table1[['statename']])
-# index <- as.character(c("Alabama"))
 
 # create a data frame with parameters and output file names
 runs <- tibble(
@@ -17,5 +16,4 @@ runs <- tibble(
 runs %>%
   select(output_file = filename, params) %>%
   pwalk(rmarkdown::render, input = "simple-factsheet-working.Rmd", output_dir = "factsheets")
-
 
