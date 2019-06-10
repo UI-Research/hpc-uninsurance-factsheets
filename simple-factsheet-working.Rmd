@@ -288,7 +288,10 @@ t2<-t %>%
          end = 2 * pi * cumsum(value)/sum(value),
          start = lag(end, default = 0),
          middle = 0.5 * (start + end),
-         nudgex = ifelse(middle < pi*1.38, 3.5, -3.5),
+        nudgex = ifelse(length(value)==3 & middle < pi, 3.5,
+            ifelse(length(value)==3 & middle > pi,-3.5,
+            ifelse(length(value)==4 & middle < pi*1.38, 3.5,
+            ifelse(length(value)==4 & middle > pi*1.38,-3.5,0)))),  
          nudgey = ifelse(middle < pi/2 | middle > pi*1.1, -0.25, 0.25),
          hjust = ifelse(middle > pi, 1, 0),
          vjust = ifelse(middle < pi/2 | middle > 3 * pi/2, 0, 1))
