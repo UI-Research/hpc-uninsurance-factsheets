@@ -295,11 +295,6 @@ t2<-t %>%
                   ifelse(length(value)==4 & end-start < 0.8 & start > pi*0.90 & end < pi*1.4, -3.5,
                   ifelse(length(value)==4 & end > pi*1.4, -3.5,
                   ifelse(length(value)==4 & end < pi, 3.5,-3.5)))))),
-        # nudgex = ifelse(length(value)==3 & middle < pi, 3.5,
-        #     ifelse(length(value)==3 & middle > pi,-3.5,
-        #     ifelse(length(value)==4 & middle > pi*0.95 & middle < pi*1.3, -3.5, #if middle is close to pi, nudge towards -x
-        #     ifelse(length(value)==4 & middle < pi*0.94, 3.5,
-        #     ifelse(length(value)==4 & middle > pi*1.3,-3.5,0))))),  
          nudgey = ifelse(middle < pi/2 | middle > pi*1.1, -0.25, 0.25),
          hjust = ifelse(middle > pi, 1, 0),
          vjust = ifelse(middle < pi/2 | middle > 3 * pi/2, 0, 1))
