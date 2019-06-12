@@ -43,15 +43,16 @@ country_table <- table1 %>%
 is_small <- state_table$small
 is_large <- !(is_small)
 # apply formats to state_table
-state_table[,grep("_mn",colnames(state_table))]<-round(as.numeric(state_table[,grep("_mn",colnames(state_table))]*100), 1)
-state_table[,grep("_share",colnames(state_table))]<-round(as.numeric(state_table[,grep("_share",colnames(state_table))]*100), 1)
+state_table[,grep("_mn",colnames(state_table))]<-format(round(as.numeric(state_table[,grep("_mn",colnames(state_table))]*100), 1),nsmall=1)
+state_table[,grep("_share",colnames(state_table))]<-format(round(as.numeric(state_table[,grep("_share",colnames(state_table))]*100),1),nsmall=1)
 state_table[,grep("_n",colnames(state_table))]<-as.numeric(state_table[,grep("_n",colnames(state_table))])
 state_table[,grep("_tstat",colnames(state_table))]<-as.numeric(state_table[,grep("_tstat",colnames(state_table))])
 
 # apply formats to country_table
-country_table[,grep("_mn",colnames(country_table))]<-round(as.numeric(country_table[,grep("_mn",colnames(country_table))]*100), 1)
+country_table[,grep("_mn",colnames(country_table))]<-format(round(as.numeric(country_table[,grep("_mn",colnames(country_table))]*100), 1),nsmall=1)
 country_table[,grep("_n",colnames(country_table))]<-as.numeric(country_table[,grep("_n",colnames(country_table))])
 country_table[,grep("_tstat",colnames(state_table))]<-as.numeric(country_table[,grep("_tstat",colnames(country_table))])
+
 #gather state data ending in _mn
 state_mn_data <- state_table %>% 
   select(ends_with("_mn")) %>% 
@@ -152,18 +153,29 @@ pie_caption1<-ifelse(state_table$note != 3 | state_table$note != 5, "Some uninsu
 pie_caption2<-ifelse(state_table$note == 5, "Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through a state-specific program. ","")
 pie_caption3<-ifelse(state_table$note == 4, "Some women likely eligible for Marketplace premium assistance may be eligible fo rmore affordable coverage through the state's Basic Health Program. ", "")
 
-if (state_table$note != 1 & state_table$note != 2 & state_table$note != 0) {
-    lookingahead<-paste("Following Medicaid expansion in ",state_table$statename, ", the uninsurance rate fell from ", state_table$ui_mn13 ," percent in 2013 to ", state_table$ui_mn, " percent in 2017. Despite coverage gains, approximately ", statement7, " ", state_table$statename," women of reproductive age remained uninsured in 2017. Outreach and enrollment efforts targeted at subgroups of women with high uninsurance rates and those already eligible for assistance could also help reduce the uninsurance rate in ", state_table$statename, ", though higher subsidies may be required to help address affordability barriers. In addition to continuing to monitor the uninsurance rate, it will be critical to track women’s ability to access the general and reproductive health services they need. This will include monitoring the availability and capacity of providers that disproportionately serve low-income and uninsured women, such as community health centers and Title X clinics.",sep='')
+
+# expasion states looking ahead text
+if (state_table$expansion == 1 & state_table$note != 1 & state_table$note != 2 & state_table$note != 0) {
+    lookingahead<-paste("Following Medicaid expansion in ",state_table$statename, ", the uninsurance rate fell from ", state_table$ui_mn13 ," percent in 2013 to ", state_table$ui_mn, " percent in 2017. Despite coverage gains, approximately ", statement7, " ", state_table$statename," women of reproductive age remained uninsured in 2017.",sep='')
 }
-if (state_table$note == 1) {
-  lookingahead<-paste("The recent Medicaid expansion in ",state_table$statename," could benefit approximately ", state_table$ui_mn, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage. Outreach and enrollment efforts targeted at subgroups of women with high uninsurance rates and those already eligible for assistance could also help reduce the uninsurance rate in ",state_table$statename, ", though higher subsidies may be required to help address affordability barriers. In addition to continuing to monitor the uninsurance rate, it will be critical to track women’s ability to access the general and reproductive health services they need. This will include monitoring the availability and capacity of providers that disproportionately serve low-income and uninsured women, such as community health centers and Title X clinics.",sep='')
+if (state_table$expansion == 1 & state_table$note == 1) {
+  lookingahead<-paste("The recent Medicaid expansion in ",state_table$statename," could benefit approximately ", state_table$ui_mn, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
 }
-if (state_table$note == 2) {
-  lookingahead<-paste("The recent vote to expand Medicaid in ",state_table$statename," could benefit approximately ", state_table$ui_mn, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage. Outreach and enrollment efforts targeted at subgroups of women with high uninsurance rates and those already eligible for assistance could also help reduce the uninsurance rate in ", state_table$statename, ", though higher subsidies may be required to help address affordability barriers. In addition to continuing to monitor the uninsurance rate, it will be critical to track women’s ability to access the general and reproductive health services they need. This will include monitoring the availability and capacity of providers that disproportionately serve low-income and uninsured women, such as community health centers and Title X clinics.",sep='')
+if (state_table$expansion == 1 & state_table$note == 2) {
+  lookingahead<-paste("The recent vote to expand Medicaid in ",state_table$statename," could benefit approximately ", state_table$ui_mn, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
 }
-if (state_table$note == 0) {
-  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", state_table$ui_mn, " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_fpw_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage. Outreach and enrollment efforts targeted at subgroups of women with high uninsurance rates and those already eligible for assistance could also help reduce the uninsurance rate in ", state_table$statename, ", though higher subsidies may be required to help address affordability barriers. In addition to continuing to monitor the uninsurance rate, it will be critical to track women’s ability to access the general and reproductive health services they need. This will include monitoring the availability and capacity of providers that disproportionately serve low-income and uninsured women, such as community health centers and Title X clinics.",sep='')
+if (state_table$expansion == 1) {
+    lookingahead<-paste("Following Medicaid expansion in ",state_table$statename, ", the uninsurance rate fell from ", state_table$ui_mn13 ," percent in 2013 to ", state_table$ui_mn, " percent in 2017. Despite coverage gains, approximately ", statement7, " ", state_table$statename," women of reproductive age remained uninsured in 2017.",sep='')
 }
+
+# nonexpansion states looking ahead text
+if (state_table$note == 0 & state_table$hier_fpw_share > 0) {
+  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", state_table$ui_mn, " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_fpw_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
+}
+if (state_table$note == 0 & state_table$hier_fpw_share == 0) {
+  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", state_table$ui_mn, " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
+}
+outreach<-paste("Outreach and enrollment efforts targeted at subgroups of women with high uninsurance rates and those already eligible for assistance could also help reduce the uninsurance rate in ", state_table$statename, ", though higher subsidies may be required to help address affordability barriers. In addition to continuing to monitor the uninsurance rate, it will be critical to track women’s ability to access the general and reproductive health services they need. This will include monitoring the availability and capacity of providers that disproportionately serve low-income and uninsured women, such as community health centers and Title X clinics.")
 ```
 ```{r echo=FALSE}
 #Add blank data for spaces in chart
@@ -226,7 +238,7 @@ ggsave("state_plot.pdf", plot = state_plot, path = "Plots", scale = 1, width =5,
 
 The Affordable Care Act established several provisions aimed at reducing the uninsurance rate, and the number of uninsured women of reproductive age (15–44) in the United States fell from 12.7 million in 2013 to 7.5 million in 2017.
 
-In `r state_table$statename`, `r statement1`, the uninsurance rate fell from `r state_table$ui_mn13` percent in 2013 to `r state_table$ui_mn` percent in 2017. Despite these gains, approximately `r state_table$ui_n` `r state_table$statename` women of reproductive age remained uninsured in 2017.
+In `r state_table$statename`, `r statement1`, the uninsurance rate fell from `r state_table$ui_mn13` percent in 2013 to `r state_table$ui_mn` percent in 2017. Despite these gains, approximately `r statement 7` `r state_table$statename` women of reproductive age remained uninsured in 2017.
 
 \vspace{-0.4in}
 \urbnheadingone{Uninsurance Rate among Subgroups of Women in `r state_table$statename` and the US, 2017}
