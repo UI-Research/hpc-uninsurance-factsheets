@@ -32,24 +32,22 @@ library(urbnthemes)
 
 set_urbn_defaults(style = "print")
 
-# table1 <- read.csv(file="Tables/StateFactSheetData_521.csv", header=TRUE, sep=",")
-# state_table <- table1 %>%
-# filter(statename == "Texas")
 state_table <- table1 %>%
-filter(statename == params$parameter1)
-
+  filter(statename == params$parameter1)
 country_table <- table1 %>%
   filter(statename == "US") 
+
 is_small <- state_table$small
 is_large <- !(is_small)
+
 # apply formats to state_table
-state_table[,grep("_mn",colnames(state_table))]<-format(round(as.numeric(state_table[,grep("_mn",colnames(state_table))]*100), 1),nsmall=1)
-state_table[,grep("_share",colnames(state_table))]<-format(round(as.numeric(state_table[,grep("_share",colnames(state_table))]*100),1),nsmall=1)
+state_table[,grep("_mn",colnames(state_table))]<-as.numeric(state_table[,grep("_mn",colnames(state_table))]*100)
 state_table[,grep("_n",colnames(state_table))]<-as.numeric(state_table[,grep("_n",colnames(state_table))])
 state_table[,grep("_tstat",colnames(state_table))]<-as.numeric(state_table[,grep("_tstat",colnames(state_table))])
+state_table[,grep("_share",colnames(state_table))]<-format(round(as.numeric(state_table[,grep("_share",colnames(state_table))]*100),1),nsmall=1)
 
 # apply formats to country_table
-country_table[,grep("_mn",colnames(country_table))]<-format(round(as.numeric(country_table[,grep("_mn",colnames(country_table))]*100), 1),nsmall=1)
+country_table[,grep("_mn",colnames(country_table))]<- as.numeric(country_table[,grep("_mn",colnames(country_table))]*100)
 country_table[,grep("_n",colnames(country_table))]<-as.numeric(country_table[,grep("_n",colnames(country_table))])
 country_table[,grep("_tstat",colnames(state_table))]<-as.numeric(country_table[,grep("_tstat",colnames(country_table))])
 
@@ -74,6 +72,7 @@ total_state_data_with_labels <- datdict %>%
   select(Variable.Name, Label.for.Figures, Language.for.Text) %>%
   right_join(state_data_with_n, by = c("Variable.Name"="var")) 
 total_state_data_with_labels$location <- toString(state_table$statename)
+
 #gather country data ending in _mn
 country_mn_data <- country_table %>% 
   select(ends_with("_mn")) %>% 
@@ -95,8 +94,10 @@ total_country_data_with_labels <- datdict %>%
   select(Variable.Name, Label.for.Figures, Language.for.Text) %>%
   right_join(country_data_with_n, by = c("Variable.Name"="var")) 
 total_country_data_with_labels$location <- 'US'
+
 all_data <- rbind(total_country_data_with_labels, total_state_data_with_labels) %>%
   filter(Variable.Name != "hier_mn")
+
 if(state_table$expansion == 0){
   if (state_table$note == 0) {
     statement1 <- "which did not expand Medicaid under the Affordable Care Act"
@@ -108,6 +109,7 @@ if(state_table$expansion == 0){
 } else{
     statement1 <- "which expanded Medicaid under the Affordable Care Act" 
 }
+
 if( state_table$ui_tstat<1.960 | state_table$ui_mn==country_table$ui_mn) {
 statement2 <- "similar"
 statement3 <- "to" 
@@ -118,8 +120,8 @@ statement3 <- "than"
 statement2 <- "lower"
 statement3 <- "than"
 } 
-statement4_frame <- all_data %>% 
-  filter(location==state_table$statename) %>% 
+
+statement4_frame <- total_state_data_with_labels %>% 
   filter(mn_value > state_table$ui_mn) %>% 
   filter(tstat_value>=1.960 ) %>%
   select(Language.for.Text, mn_value, tstat_value)
@@ -132,16 +134,19 @@ if(length(statement4_list) == 1){
   statement4 <- paste0(" ", start, " and ", end)
 } else
   statement4 <- paste0(" ", start, ", and ", end)
+
 if (state_table$expansion == 1){
   statement5 <- "further expanding access to Medicaid or other highly subsidized insurance, as well as targeted outreach and enrollment efforts to subgroups of already eligible women with the highest uninsurance rates."
 } else{
   statement5 <- "expanding access to Medicaid or other highly subsidized insurance, as well as targeted outreach and enrollment efforts to subgroups of already eligible women with the highest uninsurance rates."
 }
+
 if(state_table$ui_n >= 1000000){
   statement7 <- paste(round(state_table$ui_n/1000000, 1), "million", " ")
 } else{
   statement7 <- statement7 <- prettyNum(round(state_table$ui_n, -3),big.mark=",",scientific=FALSE)
 }
+
 if(state_table$statename == "the District of Columbia"){
   statement8 <- "DC"
 } else{
@@ -153,27 +158,26 @@ pie_caption1<-ifelse(state_table$note != 3 | state_table$note != 5, "Some uninsu
 pie_caption2<-ifelse(state_table$note == 5, "Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through a state-specific program. ","")
 pie_caption3<-ifelse(state_table$note == 4, "Some women likely eligible for Marketplace premium assistance may be eligible fo rmore affordable coverage through the state's Basic Health Program. ", "")
 
-
 # expasion states looking ahead text
 if (state_table$expansion == 1 & state_table$note != 1 & state_table$note != 2 & state_table$note != 0) {
-    lookingahead<-paste("Following Medicaid expansion in ",state_table$statename, ", the uninsurance rate fell from ", state_table$ui_mn13 ," percent in 2013 to ", state_table$ui_mn, " percent in 2017. Despite coverage gains, approximately ", statement7, " ", state_table$statename," women of reproductive age remained uninsured in 2017.",sep='')
+    lookingahead<-paste("Following Medicaid expansion in ",state_table$statename, ", the uninsurance rate fell from ", format(round(state_table$ui_mn13, 1), nsmall=1) ," percent in 2013 to ", format(round(state_table$ui_mn, 1), nsmall=1), " percent in 2017. Despite coverage gains, approximately ", statement7, " ", state_table$statename," women of reproductive age remained uninsured in 2017.",sep='')
 }
 if (state_table$expansion == 1 & state_table$note == 1) {
-  lookingahead<-paste("The recent Medicaid expansion in ",state_table$statename," could benefit approximately ", state_table$ui_mn, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
+  lookingahead<-paste("The recent Medicaid expansion in ",state_table$statename," could benefit approximately ", format(round(state_table$ui_mn, 1), nsmall=1), " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
 }
 if (state_table$expansion == 1 & state_table$note == 2) {
-  lookingahead<-paste("The recent vote to expand Medicaid in ",state_table$statename," could benefit approximately ", state_table$ui_mn, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
+  lookingahead<-paste("The recent vote to expand Medicaid in ",state_table$statename," could benefit approximately ", format(round(state_table$ui_mn, 1),nsmall=1), " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
 }
 if (state_table$expansion == 1) {
-    lookingahead<-paste("Following Medicaid expansion in ",state_table$statename, ", the uninsurance rate fell from ", state_table$ui_mn13 ," percent in 2013 to ", state_table$ui_mn, " percent in 2017. Despite coverage gains, approximately ", statement7, " ", state_table$statename," women of reproductive age remained uninsured in 2017.",sep='')
+    lookingahead<-paste("Following Medicaid expansion in ",state_table$statename, ", the uninsurance rate fell from ", format(round(state_table$ui_mn13, 1), nsmall=1) ," percent in 2013 to ", format(round(state_table$ui_mn, 1), nsmall=1), " percent in 2017. Despite coverage gains, approximately ", statement7, " ", state_table$statename," women of reproductive age remained uninsured in 2017.",sep='')
 }
 
 # nonexpansion states looking ahead text
 if (state_table$note == 0 & state_table$hier_fpw_share > 0) {
-  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", state_table$ui_mn, " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_fpw_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
+  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", format(round(state_table$ui_mn, 1),nsmall=1), " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_fpw_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
 }
 if (state_table$note == 0 & state_table$hier_fpw_share == 0) {
-  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", state_table$ui_mn, " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
+  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", format(round(state_table$ui_mn, 1),nsmall=1), " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
 }
 outreach<-paste("Outreach and enrollment efforts targeted at subgroups of women with high uninsurance rates and those already eligible for assistance could also help reduce the uninsurance rate in ", state_table$statename, ", though higher subsidies may be required to help address affordability barriers. In addition to continuing to monitor the uninsurance rate, it will be critical to track women’s ability to access the general and reproductive health services they need. This will include monitoring the availability and capacity of providers that disproportionately serve low-income and uninsured women, such as community health centers and Title X clinics.")
 ```
@@ -238,7 +242,7 @@ ggsave("state_plot.pdf", plot = state_plot, path = "Plots", scale = 1, width =5,
 
 The Affordable Care Act established several provisions aimed at reducing the uninsurance rate, and the number of uninsured women of reproductive age (15–44) in the United States fell from 12.7 million in 2013 to 7.5 million in 2017.
 
-In `r state_table$statename`, `r statement1`, the uninsurance rate fell from `r state_table$ui_mn13` percent in 2013 to `r state_table$ui_mn` percent in 2017. Despite these gains, approximately `r statement 7` `r state_table$statename` women of reproductive age remained uninsured in 2017.
+In `r state_table$statename`, `r statement1`, the uninsurance rate fell from `r format(round(state_table$ui_mn13, 1),nsmall=1)` percent in 2013 to `r format(round(state_table$ui_mn, 1),nsmall=1)` percent in 2017. Despite these gains, approximately `r statement7` `r state_table$statename` women of reproductive age remained uninsured in 2017.
 
 \vspace{-0.4in}
 \urbnheadingone{Uninsurance Rate among Subgroups of Women in `r state_table$statename` and the US, 2017}
@@ -247,7 +251,7 @@ In `r state_table$statename`, `r statement1`, the uninsurance rate fell from `r 
 Uninsured women are vulnerable to well-documented access, affordability, and health problems associated with lacking insurance coverage, including potentially limited access to family planning and other reproductive health services.
 \begin{itemize} [noitemsep,wide=0pt, leftmargin=\dimexpr\labelwidth + 2\labelsep\relax]
 \setlength\itemsep{1em}
-\item Women of reproductive age in `r state_table$statename` had a `r statement2` uninsurance rate (`r state_table$ui_mn` percent) `r statement3` similar women nationwide (11.7 percent) in 2017 (figure 1).
+\item Women of reproductive age in `r state_table$statename` had a `r statement2` uninsurance rate (`r format(round(state_table$ui_mn),nsmall=1)` percent) `r statement3` similar women nationwide (11.7 percent) in 2017 (figure 1).
 \item Within `r state_table$statename`,`r statement4` had higher uninsurance rates than the state average for all women of reproductive age in 2017.
 ``` {r results = "asis", eval = is_large} 
 cat("\\item Reducing the uninsurance rate among women of reproductive age in ", params$parameter1, " may require ", statement5)
@@ -270,8 +274,7 @@ cat("\\urbnheadingone{Looking ahead}
 cat("\\newpage
 \\raggedright
 \\urbnlogo{}
-\\urbnfigurenumber{2}
-\\urbnfiguretitle{Potential Eligibility for Financial Assistance Obtaining Coverage among Uninsured Women of Reproductive Age in ", params$parameter1, " 2017}")
+\\urbnfiguretitle{Figure 2. Potential Eligibility for Financial Assistance Obtaining Coverage among Uninsured Women of Reproductive Age in ", params$parameter1, " 2017}")
 ```
 
 ```{r, fig.width=7.5, fig.height=2.25, fig.fullwidth=TRUE, eval = is_large}
@@ -388,8 +391,8 @@ cat("\\begin{urbnbullets}
 ```
 ``` {r results = "asis", eval = is_large}
 cat("\\urbnheadingone{Looking Ahead} ",
-"\\newline ", lookingahead, "	
-\\footnoteui{}
+"\\newline ", lookingahead, outreach,
+"\\footnoteui{}
 \\contactinfo{}")
 ```
 

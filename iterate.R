@@ -3,7 +3,7 @@ library(stringr)
 library(tidyverse)
 
 table1 <- read.csv(file="Tables/StateFactSheetData_521.csv", header=TRUE, sep=",")
-table2 <- read.csv(file="Tables/State Uninsurance WRA Data Dictionary_227.csv", header=TRUE, sep=",")
+datdict <- read.csv(file="Tables/State Uninsurance WRA Data Dictionary_227.csv", header=TRUE, sep=",")
 
 index <- as.character(table1[['statename']])
 #index <- as.character("Texas")
