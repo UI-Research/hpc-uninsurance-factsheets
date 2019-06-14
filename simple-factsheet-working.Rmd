@@ -385,7 +385,7 @@ cat("\\begin{urbnbullets}
 ```
 ``` {r results = "asis", eval = is_large}
 cat("\\begin{urbnbullets}
-\\item ", paste("about ", state_table$hier_noncit400pl_share, " percent were likely ineligible for assistance obtaining comprehensive health insurance, including noncitizens, (",state_table$hier_noncit_share, " percent) and women with incomes above 400 percent of the FPL (",state_table$hier_400pl_share, " percent).",sep=""), " 
+\\item ", paste("about ", state_table$hier_noncit400pl_share, " percent were likely ineligible for assistance obtaining comprehensive health insurance, including noncitizens (",state_table$hier_noncit_share, " percent), and women with incomes above 400 percent of the FPL (",state_table$hier_400pl_share, " percent).",sep=""), " 
 \\end{urbnbullets}
 \\vspace{-0.8cm}")
 ```
