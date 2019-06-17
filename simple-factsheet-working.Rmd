@@ -41,15 +41,15 @@ is_small <- state_table$small
 is_large <- !(is_small)
 
 # apply formats to state_table
-state_table[,grep("_mn",colnames(state_table))]<-as.numeric(state_table[,grep("_mn",colnames(state_table))]*100)
+state_table[,grep("_mn",colnames(state_table))]<-as.numeric(state_table[,grep("_mn",colnames(state_table))])*100
 state_table[,grep("_n",colnames(state_table))]<-as.numeric(state_table[,grep("_n",colnames(state_table))])
 state_table[,grep("_tstat",colnames(state_table))]<-as.numeric(state_table[,grep("_tstat",colnames(state_table))])
-state_table[,grep("_share",colnames(state_table))]<-format(round(as.numeric(state_table[,grep("_share",colnames(state_table))]*100),1),nsmall=1)
+state_table[,grep("_share",colnames(state_table))]<-as.numeric(state_table[,grep("_share",colnames(state_table))])*100
 
 # apply formats to country_table
-country_table[,grep("_mn",colnames(country_table))]<- as.numeric(country_table[,grep("_mn",colnames(country_table))]*100)
+country_table[,grep("_mn",colnames(country_table))]<- as.numeric(country_table[,grep("_mn",colnames(country_table))])*100
 country_table[,grep("_n",colnames(country_table))]<-as.numeric(country_table[,grep("_n",colnames(country_table))])
-country_table[,grep("_tstat",colnames(state_table))]<-as.numeric(country_table[,grep("_tstat",colnames(country_table))])
+country_table[,grep("_tstat",colnames(country_table))]<-as.numeric(country_table[,grep("_tstat",colnames(country_table))])
 
 #gather state data ending in _mn
 state_mn_data <- state_table %>% 
@@ -156,7 +156,7 @@ if(state_table$statename == "the District of Columbia"){
 # Pie chart caption options
 pie_caption1<-ifelse(state_table$note != 3 | state_table$note != 5, "Some uninsured women in all categories may be eligible for or enrolled in a Medcaid plan that covers family planning services only. ","")
 pie_caption2<-ifelse(state_table$note == 5, "Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through a state-specific program. ","")
-pie_caption3<-ifelse(state_table$note == 4, "Some women likely eligible for Marketplace premium assistance may be eligible fo rmore affordable coverage through the state's Basic Health Program. ", "")
+pie_caption3<-ifelse(state_table$note == 4, "Some women likely eligible for Marketplace premium assistance may be eligible for more affordable coverage through the state's Basic Health Program. ", "")
 
 # expasion states looking ahead text
 if (state_table$expansion == 1 & state_table$note != 1 & state_table$note != 2 & state_table$note != 0) {
@@ -173,12 +173,16 @@ if (state_table$expansion == 1) {
 }
 
 # nonexpansion states looking ahead text
-if (state_table$note == 0 & state_table$hier_fpw_share > 0) {
-  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", format(round(state_table$ui_mn, 1),nsmall=1), " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_fpw_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
+if (state_table$expansion == 0 & state_table$note == 0 & state_table$hier_fpw_share > 0) {
+  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", format(round(state_table$ui_mn, 1),nsmall=1), " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",format(round(state_table$hier_fpw_share, 1), nsmall=1), " percent) and those with incomes between 100 and 138 percent of the FPL (",format(round(state_table$hier_100_138_share, 1), nsmall=1)," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
 }
-if (state_table$note == 0 & state_table$hier_fpw_share == 0) {
-  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", format(round(state_table$ui_mn, 1),nsmall=1), " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",state_table$hier_pov_none_share, " percent) and those with incomes between 100 and 138 percent of the FPL (",state_table$hier_100_138_share," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
+if (state_table$expansion == 0 & state_table$note == 0 & state_table$hier_fpw_share == 0) {
+  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", format(round(state_table$ui_mn, 1),nsmall=1), " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",format(round(state_table$hier_pov_none_share, 1), nsmall=1), " percent) and those with incomes between 100 and 138 percent of the FPL (",format(round(state_table$hier_100_138_share, 1), nsmall=1)," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
 }
+if (state_table$expansion == 0 & state_table$note == 0 & state_table$hier_fpw_share == 0 & state_table$hier_pov_none_share == 0){
+  lookingahead<-paste("Expanding Medicaid in ",state_table$statename," could benefit approximately ", format(round(state_table$ui_mn, 1),nsmall=1), " percent of uninsured ", state_table$statename, " women of reproductive age, including currently ineligible citizens with incomes below the FPL (",format(round(state_table$hier_pov_none_share, 1), nsmall=1), " percent) and those with incomes between 100 and 138 percent of the FPL (",format(round(state_table$hier_100_138_share, 1), nsmall=1)," percent) for whom Medicaid may be more affordable than Marketplace coverage.",sep='')
+}
+
 outreach<-paste("Outreach and enrollment efforts targeted at subgroups of women with high uninsurance rates and those already eligible for assistance could also help reduce the uninsurance rate in ", state_table$statename, ", though higher subsidies may be required to help address affordability barriers. In addition to continuing to monitor the uninsurance rate, it will be critical to track women’s ability to access the general and reproductive health services they need. This will include monitoring the availability and capacity of providers that disproportionately serve low-income and uninsured women, such as community health centers and Title X clinics.")
 ```
 ```{r echo=FALSE}
@@ -242,7 +246,7 @@ ggsave("state_plot.pdf", plot = state_plot, path = "Plots", scale = 1, width =5,
 
 The Affordable Care Act established several provisions aimed at reducing the uninsurance rate, and the number of uninsured women of reproductive age (15–44) in the United States fell from 12.7 million in 2013 to 7.5 million in 2017.
 
-In `r state_table$statename`, `r statement1`, the uninsurance rate fell from `r format(round(state_table$ui_mn13, 1),nsmall=1)` percent in 2013 to `r format(round(state_table$ui_mn, 1),nsmall=1)` percent in 2017. Despite these gains, approximately `r statement7` `r state_table$statename` women of reproductive age remained uninsured in 2017.
+In `r state_table$statename`, `r statement1`, the uninsurance rate fell from `r format(round(state_table$ui_mn13, 1),nsmall=1)` percent in 2013 to `r format(round(state_table$ui_mn, 1),nsmall=1)` percent in 2017. Despite these gains, approximately `r statement7` `r statement8` women of reproductive age remained uninsured in 2017.
 
 \vspace{-0.4in}
 \urbnheadingone{Uninsurance Rate among Subgroups of Women in `r state_table$statename` and the US, 2017}
@@ -274,7 +278,7 @@ cat("\\urbnheadingone{Looking ahead}
 cat("\\newpage
 \\raggedright
 \\urbnlogo{}
-\\urbnfiguretitle{Figure 2. Potential Eligibility for Financial Assistance Obtaining Coverage among Uninsured Women of Reproductive Age in ", params$parameter1, " 2017}")
+\\urbnfiguretitle{Figure 2. Potential Eligibility for Financial Assistance Obtaining Coverage among Uninsured Women of Reproductive Age in ", params$parameter1, ", 2017}", sep="")
 ```
 
 ```{r, fig.width=7.5, fig.height=2.25, fig.fullwidth=TRUE, eval = is_large}
@@ -292,7 +296,8 @@ t<-state_table %>%
   select(hier_pov_none_share, hier_noncit400pl_share,hier_mktplce_share,hier_medicaid_share,hier_fpw_share) %>% 
   gather(key="var",value="value") %>% 
   left_join(pie_labs) %>% 
-  filter(value>0)
+  filter(value>0) %>% 
+  mutate(value = round(value, 1),nsmall=1) 
 t$lab_for_figs_brks<-sapply(strwrap(t$lab_for_figs, 35, simplify=FALSE), paste, collapse="\n" )
  t2<-t %>% 
   mutate(labels_w_num = paste(lab_for_figs_brks, " \n",as.character(value), "%", sep =""), 
@@ -307,11 +312,6 @@ t$lab_for_figs_brks<-sapply(strwrap(t$lab_for_figs, 35, simplify=FALSE), paste, 
                   ifelse(length(value)==4 & end-start < 0.8 & start > pi*0.90 & end < pi*1.4, -3.5,
                   ifelse(length(value)==4 & end > pi*1.4, -3.5,
                   ifelse(length(value)==4 & end < pi, 3.5,-3.5)))))),
-        # nudgex = ifelse(length(value)==3 & middle < pi, 3.5,
-        #     ifelse(length(value)==3 & middle > pi,-3.5,
-        #     ifelse(length(value)==4 & middle > pi*0.95 & middle < pi*1.3, -3.5, #if middle is close to pi, nudge towards -x
-        #     ifelse(length(value)==4 & middle < pi*0.94, 3.5,
-        #     ifelse(length(value)==4 & middle > pi*1.3,-3.5,0))))),  
          nudgey = ifelse(middle < pi/2 | middle > pi*1.1, -0.25, 0.25),
          hjust = ifelse(middle > pi, 1, 0),
          vjust = ifelse(middle < pi/2 | middle > 3 * pi/2, 0, 1))
@@ -355,37 +355,37 @@ Among approximately ", statement7, " uninsured women of reproductive age in ", p
 
 ``` {r results = "asis", eval = is_large}
 cat("\\begin{urbnbullets}
-\\item about ", state_table$hier_medicaid_share, " percent were likely eligible for comprehensive Medicaid or Children’s Health Insurance Program coverage based on their income;
+\\item about ", format(round(state_table$hier_medicaid_share,1),nsmall=1), " percent were likely eligible for comprehensive Medicaid or Children’s Health Insurance Program coverage based on their income;
 \\end{urbnbullets}
 \\vspace{-0.3cm}")
 ```
 ```{r results = "asis", eval = is_large & (state_table$hier_100_138_share==0)}
 cat("\\begin{urbnbullets}
-\\item another ", state_table$hier_mktplce_share, " percent were likely eligible for assistance with premiums for Marketplace coverage based on their income;
+\\item another ", format(round(state_table$hier_mktplce_share,1),nsmall=1), " percent were likely eligible for assistance with premiums for Marketplace coverage based on their income;
 \\end{urbnbullets}
 \\vspace{-0.3cm}")
 ```
 ```{r results = "asis", eval = is_large & (state_table$hier_100_138_share>0)}
 cat("\\begin{urbnbullets}
-\\item another ", state_table$hier_mktplce_share, " percent were likely eligible for assistance with premiums for Marketplace coverage based on their income, including ", state_table$hier_100_138_share, " percent with incomes between 100 and 138 percent of the FPL;
+\\item another ", format(round(state_table$hier_mktplce_share,1),nsmall=1), " percent were likely eligible for assistance with premiums for Marketplace coverage based on their income, including ", format(round(state_table$hier_100_138_share,1),nsmall=1), " percent with incomes between 100 and 138 percent of the FPL;
 \\end{urbnbullets}
 \\vspace{-0.3cm}")
 ```
 ```{r results = "asis", eval = is_large & (state_table$hier_fpw_share>0)}
 cat("\\begin{urbnbullets}
-\\item about ", state_table$hier_fpw_share, " percent had incomes below the FPL and were likely eligible for coverage for family planning services only; and 
+\\item about ", format(round(state_table$hier_fpw_share,1),nsmall=1), " percent had incomes below the FPL and were likely eligible for coverage for family planning services only; and 
 \\end{urbnbullets}
 \\vspace{-0.3cm}")
 ```
 ``` {r results = "asis", eval = is_large & (state_table$hier_pov_none_share>0)}
 cat("\\begin{urbnbullets}
-\\item about ", state_table$hier_pov_none_share, " percent were women with incomes below the FPL who were likely ineligible for assistance obtaining comprehensive Medicaid, Children’s Health Insurance Program, or Marketplace coverage; and
+\\item about ", format(round(state_table$hier_pov_none_share,1),nsmall=1), " percent were women with incomes below the FPL who were likely ineligible for assistance obtaining comprehensive Medicaid, Children’s Health Insurance Program, or Marketplace coverage; and
 \\end{urbnbullets}
 \\vspace{-0.1cm}")
 ```
 ``` {r results = "asis", eval = is_large}
 cat("\\begin{urbnbullets}
-\\item ", paste("about ", state_table$hier_noncit400pl_share, " percent were likely ineligible for assistance obtaining comprehensive health insurance, including noncitizens, (",state_table$hier_noncit_share, " percent) and women with incomes above 400 percent of the FPL (",state_table$hier_400pl_share, " percent).",sep=""), " 
+\\item ", paste("about ", format(round(state_table$hier_noncit400pl_share,1),nsmall=1), " percent were likely ineligible for assistance obtaining comprehensive health insurance, including noncitizens (",format(round(state_table$hier_noncit_share,1),nsmall=1), " percent), and women with incomes above 400 percent of the FPL (",format(round(state_table$hier_400pl_share,1),nsmall=1), " percent).",sep=""), " 
 \\end{urbnbullets}
 \\vspace{-0.8cm}")
 ```
