@@ -19,9 +19,6 @@
 \usepackage{paracol}
 \usepackage{geometry}
 \usepackage{setspace}
-\geometry{
-  margin=.5in
-}
 %\usepackage{tabularx}           % for library(kableExtra)
 
 % set font encoding for PDFLaTeX or XeLaTeX
@@ -32,6 +29,7 @@
 \usetikzlibrary{calc}
 \usepackage{memhfixc}
 \usepackage{amssymb}          % for itemized list styles
+\usepackage{amsthm}
 
 % document setup
 \definecolor{urbnblue}{HTML}{1696D2}    % defines the Urban Institute blue color
@@ -99,7 +97,7 @@
   \thispagestyle{empty}
   \begin{tikzpicture}[remember picture, overlay]
     \draw 
-      node[anchor=south west, minimum height=0.5in, minimum width=8.5in, text width=8in] at ($(current page.south west) + (0.4in,0.13in)$) 
+      node[anchor=south west, minimum height=0.5in, minimum width=8.5in, text width=8in] at ($(current page.south west) + (0.75in,0.13in)$) 
       {\color{gray}Urban Institute \space
       \color{urbnblue}$\blacksquare$ \space
       \color{gray}500 L'Enfant Plaza \space
@@ -211,6 +209,7 @@
 % boiler plate
 \newcommand{\urbnboilerplate}[3]{
   \thispagestyle{empty}
+  \frenchspacing
   
   \begin{tikzpicture}[remember picture, overlay]
     % horizontal line
@@ -219,7 +218,7 @@
     \draw 
       node[align=left, anchor=south west, minimum height=0.5in, minimum width=8.5in, text width=6.5in] at ($(current page.south west) + (0in,0.38in)$) 
       {
-      \small{This fact sheet was funded by #1. The views expressed are those of the author/authors and should not be attributed to the Urban Institute, its trustees, or its funders. Further information on the Urban Institute’s funding principles is available at \href{https://www.urban.org/aboutus/our-funding/funding-principles}{urban.org/fundingprinciples.}
+      \small{This fact sheet was funded by #1. The views expressed are those of the authors and should not be attributed to the Urban Institute, its trustees, or its funders. Further information on the Urban Institute’s funding principles is available at \href{https://www.urban.org/aboutus/our-funding/funding-principles}{urban.org/fundingprinciples.}
       
       
       Copyright © #2 #3. Urban Institute. Permission is granted for reproduction of this file, with attribution to the Urban Institute.}
@@ -240,3 +239,5 @@
     \label{fig:boat1}
   \end{figure}
 }
+
+\AtBeginDocument{\fontsize{10pt}{9pt}\selectfont}
